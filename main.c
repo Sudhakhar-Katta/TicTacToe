@@ -71,7 +71,6 @@ char* get_player_name(Player* players_in_game, int len){
 
 char* get_player_piece(Player* players_in_game,int len){
     char piece;
-    
     while(true){
         piece=get_valid_char("Please choose your piece: ");
         if(is_piece_is_already_chosen(piece,players_in_game,len)){
@@ -97,6 +96,64 @@ Game setup_game(int dimensions, char blank_char){
     game.curr_player_turn=pick_who_goes_first(2);
     players_pick_pieces();
     return game;
+}
+bool some_won_diagonally_right(Board* board){
+    /*
+       X 
+        X
+         X
+    */    
+   char upper_right=board->contents[0][board->dimensions];
+   for(int i=1; i< board->dimensions;++i){
+        if(board->contents[i][i] != upper_right){
+            return true;
+        }
+   }  
+   return false;
+}
+
+bool some_won_diagonally_left(Board* board){
+    /*
+       X 
+        X
+         X
+    */    
+   char upper_left=board->contents[0][0];
+   for(int i=1; i< board->dimensions;++i){
+        if(board->contents[i][i] != upper_left){
+            return true;
+        }
+   }  
+   return false;
+}
+
+bool some_won_diagonally(Board* board){
+    return someone_won_diagonally_left() || some_won_diagonally_right();
+}
+
+bool some_won_vertically(Board* board){
+    for(int i=0;i<board->dimensions;++i){
+        char* column=get_column_i();
+        if(all_same(column,board->dimensions)){
+            free(column);
+            return true;
+        }
+        free(column);
+    }
+    return false;
+}
+
+bool someone_won_horizontally(Board* board){
+    for(int i=0;i<board->dimensions;++i){
+        if(all_same(board->contents[i],board->dimensions)){
+            return true;
+        }
+    }
+    return false;
+}
+
+bool someone_won(){
+    return someone_won_horizontally() || someone_won_vertically() || someone_won_diagonally();
 }
 
 bool is_game_over(){
