@@ -5,6 +5,7 @@
 typedef struct{
     Board board;
     int curr_player_turn;
+    Player* players;
 }Game;
 
 
@@ -17,7 +18,13 @@ typedef struct{
 typedef struct{
     char* name;
     char piece;
+    
 }Player;
+
+typedef struct{
+    int row;
+    int col;
+}Move;
 
 /*
 The following code about shows what content is need to create a board which would be the dimensiosn and the n*n grid and a blank character to emulate the empty box in a 
@@ -97,67 +104,24 @@ Game setup_game(int dimensions, char blank_char){
     players_pick_pieces();
     return game;
 }
-bool some_won_diagonally_right(Board* board){
-    /*
-       X 
-        X
-         X
-    */    
-   char upper_right=board->contents[0][board->dimensions];
-   for(int i=1; i< board->dimensions;++i){
-        if(board->contents[i][i] != upper_right){
-            return true;
-        }
-   }  
-   return false;
-}
-
-bool some_won_diagonally_left(Board* board){
-    /*
-       X 
-        X
-         X
-    */    
-   char upper_left=board->contents[0][0];
-   for(int i=1; i< board->dimensions;++i){
-        if(board->contents[i][i] != upper_left){
-            return true;
-        }
-   }  
-   return false;
-}
-
-bool some_won_diagonally(Board* board){
-    return someone_won_diagonally_left() || some_won_diagonally_right();
-}
-
-bool some_won_vertically(Board* board){
+bool is_full(Board* board){
     for(int i=0;i<board->dimensions;++i){
-        char* column=get_column_i();
-        if(all_same(column,board->dimensions)){
-            free(column);
-            return true;
-        }
-        free(column);
-    }
-    return false;
-}
-
-bool someone_won_horizontally(Board* board){
-    for(int i=0;i<board->dimensions;++i){
-        if(all_same(board->contents[i],board->dimensions)){
-            return true;
+        for(int j=0;j<board->dimensions;j++){
+            if(board->dimensions[i][j]==board->blank_char){
+                return false;
+            }
         }
     }
-    return false;
+    return true;
 }
 
-bool someone_won(){
-    return someone_won_horizontally() || someone_won_vertically() || someone_won_diagonally();
+bool is_tie(Board* board){
+    is_full(board) && !someone_won(board);
 }
 
-bool is_game_over(){
-    return someone_won() ||  tie();
+
+bool is_game_over(Board* board){
+    return someone_won(board) ||  tie(board);
 }
 
 void take_turn(Game *game){
@@ -166,14 +130,57 @@ void take_turn(Game *game){
     game ->board->contents[move.row][move.col]= curr_player->piece;
 }
 
+Player* get_curr_player(Game* game){
+    /*
+        THis function should only be called after checking if someone won
+    */
+   return game->players[game->curr_player_turn];
+}
+
+bool is_valid_move(Move* move){
+    return isValidFormat() && is_on_board(move) &&is_empty();
+}
+
+
+Move get_move(Move move){
+    Move move; 
+    do{
+        printf("Enter a spot on the board to play in the form, row col: ");
+        scanf("%d %d",&move.row,&move.col);
+    }while(!is_valid_move(move));
+    return move;
+}
+
+
+void announce_results(Board* board){
+    if(someone_won(board)){
+        Player* winner= get_curr_player();
+        printf("%s won the game!\n",winner->name);
+    }
+    else{
+        printf("Tie Game\n");
+    }
+}
+
+void switch_turn(Game* game){
+    if(game->curr_player_turn==0){
+        game->curr_player_turn=1;
+    }
+    else{
+        game->curr_player_turn=0;
+    }
+}
 
 
 void play_game(Game *game){  // THis is a game pointer because we actually want the game not a copy
-    while(!is_game_over()){
-        take_turn();
-        switch_turns();
+    while(true){
+        take_turn(game);
+        if(is_game_over(&game->board)){
+            break;
+        }
+        switch_turns(game);
     }
-    announce_results();
+    announce_results(game);
 }
 
 
